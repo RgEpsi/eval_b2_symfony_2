@@ -13,13 +13,15 @@
     </div>
     {% set mois = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'] %}
     {%if (events | length > 0)%}
-    {% for event in events %}
-        {{ include('event/card.html.twig', {
-            event: event,
-            mois: mois,
-            showUnregister: true
-        }) 
-        }}
+        <ul class="event-list">
+            {% for event in events %}
+                {{ include('event/card.html.twig', {
+                    event: event,
+                    mois: mois,
+                    showUnregister: true
+                }) 
+            }}
+        </ul>
     {% endfor %}
     </ul>
 
