@@ -72,13 +72,26 @@ final class EventController extends AbstractController
 
     #[Route('/evenement/{id}/desinscription', name: 'app_event_unregister', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
-    public function unregister(Event $event, EntityManagerInterface $entityManager): Response
-    {
+    public function unregister(
+        Event $event,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): Response {
         $event->removeParticipant($this->getUser());
+
         $entityManager->flush();
 
-        $this->addFlash('success', 'Vous êtes désinscrit de cet événement.');
+        $this->addFlash(
+            'success',
+            'Vous êtes désinscrit de cet événement.'
+        );
 
-        return $this->redirectToRoute('app_event_show', ['id' => $event->getId()]);
+        if ($request->request->get('origin') === 'mine') {
+            return $this->redirectToRoute('app_my_events');
+        }
+
+        return $this->redirectToRoute('app_event_show', [
+            'id' => $event->getId()
+        ]);
     }
 }

@@ -7,6 +7,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\User;
 
 final class HomeController extends AbstractController
 {
@@ -23,4 +25,22 @@ final class HomeController extends AbstractController
             'categorie' => $categorie,
         ]);
     }
+
+   #[Route('/mes-inscriptions', name: 'app_my_events')]
+   #[IsGranted('ROLE_USER')]
+   public function mine(): Response
+ {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $events = $user->getEvents();
+
+        return $this->render('event/mine.html.twig', [
+            'events' => $events,
+        ]);
+    }
+
 }
