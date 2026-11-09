@@ -18,9 +18,12 @@
                 <span class="badge">{{ event.categoryLabel }}</span>
                 <h1>{{ event.title }}</h1>
                 <p>{{ event.date|date('d/m/Y · H\\hi') }}</p>
-                {# Évaluation 2 – bouton visible seulement par l'auteur de l'événement ou un admin :
-                <a class="btn btn-small" href="#">Modifier</a>
-                #}
+                {% if is_granted('ROLE_ADMIN') or (app.user and event.author and app.user.id == event.author.id) %}
+                    <a class="btn btn-small"
+                        href="{{ path('app_event_edit', {id: event.id}) }}">
+                        Modifier
+                    </a>
+                {% endif %}
             </div>
         </header>
 
