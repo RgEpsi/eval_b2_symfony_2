@@ -39,7 +39,6 @@
                                 </form>
                             <form method="post"
                                 action="{{ path('app_reject_event', {id: event.id}) }}">
-
                                 <input type="hidden"
                                     name="_token"
                                     value="{{ csrf_token('refuse_event' ~ event.id) }}">
