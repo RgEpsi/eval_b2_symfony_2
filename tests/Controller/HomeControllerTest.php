@@ -39,5 +39,19 @@ class HomeControllerTest extends WebTestCase
         );
     }
 
+
+    public function testCategoryFilter(): void
+    {
+        $client = static::createClient();
+
+        $crawler = $client->request('GET', '/?categorie=sport');
+
+        $this->assertResponseIsSuccessful();
+
+        $this->assertCount(1, $crawler->filter('.event-card'));
+
+        $this->assertSelectorExists('.legend .cat-sport a.active');
+    }
+
 }
 
