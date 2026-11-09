@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-
+use App\Entity\User;
 final class EventController extends AbstractController
 {
     #[Route('/evenement/ajouter', name: 'app_event_new')]
@@ -31,6 +31,13 @@ final class EventController extends AbstractController
 
             // À l'ajout, l'événement n'est pas validé
             $event->setValidated(false);
+            
+            // L'utilisateur connecté est l'auteur de l'événement
+            $user = $this->getUser();
+
+            if ($user instanceof User) {
+                $event->setAuthor($user);
+            }
 
             $entityManager->persist($event);
             $entityManager->flush();
@@ -94,4 +101,45 @@ final class EventController extends AbstractController
             'id' => $event->getId()
         ]);
     }
+
+    
+    #[Route('/evenement/{id}/modifier', name: 'app_event_edit',requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_USER')]
+    public function edit(Event $event, Request $request, EntityManagerInterface $entityManager): Response {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        // Vérifie si l'utilisateur peut modifier l'événement
+        if (
+            $event->getAuthor()?->getId() !== $user->getId()
+            && !$this->isGranted('ROLE_ADMIN')
+        ) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $form = $this->createForm(EventType::class, $event);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            $this->addFlash(
+                'success',
+                'L\'événement a été modifié.'
+            );
+
+            return $this->redirectToRoute('app_event_show', [
+                'id' => $event->getId()
+            ]);
+        }
+
+        return $this->render('event/edit.html.twig', [
+            'form' => $form,
+            'event' => $event,
+        ]);
+    }
+
 }
