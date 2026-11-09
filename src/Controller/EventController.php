@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 final class EventController extends AbstractController
 {
     #[Route('/evenement/ajouter', name: 'app_event_new')]
@@ -21,13 +23,9 @@ final class EventController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Upload de l'image (doc : https://symfony.com/doc/7.4/controller/upload_file.html)
-            $imageFile = $form->get('image')->getData();
-            if ($imageFile) {
-                $fileName = uniqid().'.'.$imageFile->guessExtension();
-                $imageFile->move($this->getParameter('kernel.project_dir').'/public/uploads', $fileName);
-                $event->setImage($fileName);
-            }
+
+            // Upload de l'image 
+            $this->uploadImage($form, $event);
 
             // À l'ajout, l'événement n'est pas validé
             $event->setValidated(false);
@@ -124,6 +122,8 @@ final class EventController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->uploadImage($form, $event);
+
             $entityManager->flush();
 
             $this->addFlash(
@@ -141,5 +141,29 @@ final class EventController extends AbstractController
             'event' => $event,
         ]);
     }
+
+
+    private function uploadImage(FormInterface $form, Event $event): void
+    {
+        $imageFile = $form->get('image')->getData();
+
+        // Si aucune image n'est envoyée, on ne change rien
+        if (!$imageFile instanceof UploadedFile) {
+            return;
+        }
+
+        // Génération d'un nom unique
+        $fileName = uniqid() . '.' . $imageFile->guessExtension();
+
+        // Déplacement dans le dossier uploads
+        $imageFile->move(
+            $this->getParameter('kernel.project_dir') . '/public/uploads',
+            $fileName
+        );
+
+        // Enregistrement du nom dans l'événement
+        $event->setImage($fileName);
+    }
+
 
 }
